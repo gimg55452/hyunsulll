@@ -17,26 +17,13 @@
   ---------------------------------------------------------------
   아래 <script> 맨 위의 CONFIG 객체만 수정하면 됩니다.
   - herName / myName      : 이름
-  - startDate             : 사귄 날 (YYYY-MM-DD)const CONFIG = {
-  herName: "냥이",
-  myName: "집사",
-  startDate: "2026-01-24",          // 사귄 날 (연도 확인!)
-  birthday: "2026-11-15",           // 올해 생일
-  password: "0124",                 // 비밀번호 4자리
-  passwordHint: "힌트: 우리가 사귀기 시작한 날 (월·일 4자리)",
-  candles: 5,
-  heroLines: [
-    "태어나줘서 정말 고마워",
-    "올해 가을도 냥이와 함께라 행복해",
-    "오늘은 온전히 냥이만의 날이야",
-    "세상에서 제일 예쁜 공주, 생일 축하해"
-  ],
+  - startDate             : 사귄 날 (YYYY-MM-DD)
   - birthday              : 올해 생일 (YYYY-MM-DD)
   - password              : 첫 화면 비밀번호 (숫자 4자리)
   - photos[].src          : 사진 경로. 저장소에 photos 폴더를 만들고
                             "photos/1.jpg" 처럼 적으면 됩니다.
                             비워두면 이모지 카드로 보여요.
-  - quiz / reasons / coupons / letter / secretMessage : 문구
+  - quiz / reasons / coupons / letter : 문구
   테스트할 때 인트로를 건너뛰려면 주소 끝에 ?skip 을 붙이세요.
   ===============================================================
 -->
@@ -344,11 +331,6 @@ body.entered #musicBtn{display:grid;place-items:center}
 #musicBtn.on{animation:spin 4s linear infinite;background:var(--orange);color:#fff}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-#catchBadge{position:fixed;top:max(16px,env(safe-area-inset-top));left:14px;z-index:45;padding:8px 14px;border-radius:999px;background:rgba(252,246,238,.92);box-shadow:var(--shadow);
-  font-size:14px;transform:scale(0);transition:transform .4s cubic-bezier(.2,1.6,.4,1)}
-#catchBadge.show{transform:scale(1)}
-#catchBadge.bump{animation:bump .3s}
-@keyframes bump{50%{transform:scale(1.25)}}
 
 #modal{position:fixed;inset:0;z-index:90;background:rgba(46,26,18,.55);display:flex;align-items:center;justify-content:center;padding:20px;
   opacity:0;visibility:hidden;transition:all .3s;backdrop-filter:blur(3px)}
@@ -564,7 +546,6 @@ body.entered #musicBtn{display:grid;place-items:center}
   <a href="#finale" title="마무리">🎆</a>
 </nav>
 <button id="musicBtn" aria-label="음악 켜기/끄기">♪</button>
-<div id="catchBadge"></div>
 <div id="modal"><div class="modal-card" id="modalCard"></div></div>
 <div id="toast"></div>
 
@@ -642,9 +623,7 @@ const CONFIG = {
 
 태어나줘서, 그리고 나를 만나줘서 고마워.
 사랑해. 생일축하해.`,
-  finaleMessage: "올해도, 내년에도,\n그 다음 가을에도\n냥이의 생일을 함께 축하할게 🍂",
-  catchGoal: 10,
-  secretMessage: "낙엽 10개를 다 모았네!\n사실 오늘 저녁에\n깜짝 선물이 하나 더 있어 🎁"
+  finaleMessage: "올해도, 내년에도,\n그 다음 가을에도\n냥이의 생일을 함께 축하할게 🍂"
 };
 /* ===================================================================== */
 
@@ -994,7 +973,7 @@ function enterMain() {
 
 /* ================= HERO ================= */
 $("#heroName").textContent = `사랑하는 ${CONFIG.herName}에게`;
-$("#leafTip").textContent = `🍁 떨어지는 낙엽을 눌러서 잡아봐 · ${CONFIG.catchGoal}개 모으면 비밀 메시지!`;
+$("#leafTip").textContent = "🍁 떨어지는 낙엽을 톡 눌러서 터트려봐";
 $("#footer").textContent = `made with 🍂 by ${CONFIG.myName}, for ${CONFIG.herName}`;
 $("#finaleMsg").textContent = CONFIG.finaleMessage;
 $("#nightName").textContent = "사랑하는 " + CONFIG.herName + " 🎂";
@@ -1027,13 +1006,6 @@ tickCounter(); setInterval(tickCounter, 1000);
 })();
 
 /* leaf catching */
-let caught = store.get("caught", 0), secretShown = store.get("secret", false);
-function updateBadge(bump) {
-  const b = $("#catchBadge");
-  if (caught > 0) { b.textContent = `🍁 ${caught} / ${CONFIG.catchGoal}`; b.classList.add("show"); }
-  if (bump) { b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump"); }
-}
-updateBadge();
 document.addEventListener("click", e => {
   if (!document.body.classList.contains("entered")) return;
   if (e.target.closest("button,a,input,textarea,.polaroid,.coupon,.jar,.env-big,.letter-full,#modal,.card")) return;
@@ -1042,12 +1014,7 @@ document.addEventListener("click", e => {
   const hit = leaves.find(l => Math.hypot(l.x - e.clientX, l.y - e.clientY) < l.size * 2 + 14);
   if (hit) {
     leafBurst(hit.x, hit.y, 12); Object.assign(hit, newLeaf(false));
-    caught++; store.set("caught", caught); updateBadge(true); if (navigator.vibrate) navigator.vibrate(15);
-    if (caught >= CONFIG.catchGoal && !secretShown) {
-      secretShown = true; store.set("secret", true);
-      confetti(W / 2, H / 2, 100);
-      setTimeout(() => modal({ emoji: "🍁", title: "비밀 메시지 발견!", text: CONFIG.secretMessage }), 400);
-    }
+    if (navigator.vibrate) navigator.vibrate(15);
   } else {
     leafBurst(e.clientX, e.clientY, 5);
   }
